@@ -46,6 +46,7 @@ class App extends Component {
         this.state = {
             input: "",
             imageUrl: "",
+            imageAttributes: [],
         };
     }
 
@@ -54,33 +55,43 @@ class App extends Component {
         this.setState({ input: event.target.value });
     };
 
-    onButtonSubmit = () => {
-        console.log("click");
+    getImageDescription = (response) => {
+        console.log(response);
+    };
+
+    onDetectButtonSubmit = () => {
+        console.log("click Detect");
         this.setState({ imageUrl: this.state.input });
         // Prediction on general model using video API
         clarifaiApp.models
             .predict(
-                // Clarifai.GENERAL_MODEL,
+                Clarifai.GENERAL_MODEL,
                 // Clarifai.COLOR_MODEL,
+                // "a403429f2ddf4b49b307e318f00e528b",
+                // "53e1df302c079b3db8a0a36033ed2d15", // new Face Detection Model Key
                 // "https://samples.clarifai.com/metro-north.jpg"
-                "53e1df302c079b3db8a0a36033ed2d15", // new Face Detection Model Key
                 this.state.input
             )
-            .then(
-                function (response) {
-                    console.log(
-                        // response.outputs[0].data.regions[0].region_info
-                        //     .bounding_box
-                        response.outputs[0].data.clusters[0]
-                    );
-                },
-                function (err) {
-                    log(err);
-                }
-            );
-        // .then(log)
-        // .catch(log);
+            // .then((response) => console.log(response.outputs[0].data.concepts))
+            // .then((response) =>
+            //     this.getImageDescription(response.outputs[0].data.concepts)
+            // )
+            .then((response) =>
+                this.setState({
+                    imageAttributes: response.outputs[0].data.concepts,
+                })
+            )
+            .catch((err) => log(err));
     };
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.imageInfos !== this.state.imageInfos) {
+            console.log(
+                "imageInfos (ComponentDidUpdate): ",
+                this.state.imageInfos
+            );
+        }
+    }
 
     render() {
         return (
@@ -91,9 +102,12 @@ class App extends Component {
                 <Rank />
                 <ImageLinkForm
                     onInputChange={this.onInputChange}
-                    onButtonSubmit={this.onButtonSubmit}
+                    onDetectButtonSubmit={this.onDetectButtonSubmit}
                 />
-                <FaceRecognition imageUrl={this.state.imageUrl} />
+                <FaceRecognition
+                    imageUrl={this.state.imageUrl}
+                    imageAttributes={this.state.imageAttributes}
+                />
             </div>
         );
     }
