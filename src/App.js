@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import Navigation from "./components/Navigation/Navigation";
+import SignIn from "./components/SignIn/SignIn";
+import Register from "./components/Register/Register";
 import Logo from "./components/Logo/Logo";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import Rank from "./components/Rank/Rank";
@@ -47,6 +49,8 @@ class App extends Component {
             input: "",
             imageUrl: "",
             imageAttributes: [],
+            route: "Register",
+            isSignedIn: true,
         };
     }
 
@@ -55,12 +59,7 @@ class App extends Component {
         this.setState({ input: event.target.value });
     };
 
-    getImageDescription = (response) => {
-        console.log(response);
-    };
-
     onDetectButtonSubmit = () => {
-        console.log("click Detect");
         this.setState({ imageUrl: this.state.input });
         // Prediction on general model using video API
         clarifaiApp.models
@@ -93,21 +92,42 @@ class App extends Component {
         }
     }
 
+    onRouteChange = (route) => {
+        if (route === "signOut") {
+            this.setState({ isSignedIn: false });
+        } else if (route === "home") {
+            this.setState({ isSignedIn: true });
+        }
+        this.setState({ route: route });
+    };
+
     render() {
+      const { isSignedIn, route, imageUrl, imageAttributes } = this.state;
         return (
             <div className="App">
                 <Particles className="particles" params={particleOptions} />
-                <Navigation />
-                <Logo />
-                <Rank />
-                <ImageLinkForm
-                    onInputChange={this.onInputChange}
-                    onDetectButtonSubmit={this.onDetectButtonSubmit}
+                <Navigation
+                    isSignedIn={isSignedIn}
+                    onRouteChange={this.onRouteChange}
                 />
-                <FaceRecognition
-                    imageUrl={this.state.imageUrl}
-                    imageAttributes={this.state.imageAttributes}
-                />
+                {route === "home" ? (
+                    <>
+                        <Logo />
+                        <Rank />
+                        <ImageLinkForm
+                            onInputChange={this.onInputChange}
+                            onDetectButtonSubmit={this.onDetectButtonSubmit}
+                        />
+                        <FaceRecognition
+                            imageUrl={imageUrl}
+                            imageAttributes={imageAttributes}
+                        />
+                    </>
+                ) : route === "signIn" ? (
+                    <SignIn onRouteChange={this.onRouteChange} />
+                ) : (
+                    <Register onRouteChange={this.onRouteChange} />
+                )}
             </div>
         );
     }
