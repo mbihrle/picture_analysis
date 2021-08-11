@@ -49,10 +49,38 @@ class App extends Component {
             input: "",
             imageUrl: "",
             imageAttributes: [],
-            route: "Register",
-            isSignedIn: true,
+            route: "signIn",
+            isSignedIn: false,
+            user: {
+                id: "",
+                name: "",
+                email: "",
+                entries: 0,
+                joined: "",
+            },
         };
     }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.imageInfos !== this.state.imageInfos) {
+            console.log(
+                "imageInfos (ComponentDidUpdate): ",
+                this.state.imageInfos
+            );
+        }
+    }
+
+    loadUser = (data) => {
+        this.setState({
+            user: {
+                id: data.id,
+                name: data.name,
+                email: data.email,
+                entries: data.entries,
+                joined: data.joined,
+            },
+        });
+    };
 
     onInputChange = (event) => {
         // console.log(event.target.value);
@@ -75,22 +103,30 @@ class App extends Component {
             // .then((response) =>
             //     this.getImageDescription(response.outputs[0].data.concepts)
             // )
-            .then((response) =>
+            .then((response) => {
                 this.setState({
                     imageAttributes: response.outputs[0].data.concepts,
-                })
-            )
+                });
+                if (response) {
+                    fetch("http://localhost:3000/image", {
+                        method: "put",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: this.state.user.id,
+                        }),
+                    })
+                        .then((resp) => resp.json())
+                        .then((entries) => {
+                            this.setState(
+                                Object.assign(this.state.user, {
+                                    entries,
+                                })
+                            );
+                        });
+                }
+            })
             .catch((err) => log(err));
     };
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.imageInfos !== this.state.imageInfos) {
-            console.log(
-                "imageInfos (ComponentDidUpdate): ",
-                this.state.imageInfos
-            );
-        }
-    }
 
     onRouteChange = (route) => {
         if (route === "signOut") {
@@ -102,7 +138,8 @@ class App extends Component {
     };
 
     render() {
-      const { isSignedIn, route, imageUrl, imageAttributes } = this.state;
+        const { user, isSignedIn, route, imageUrl, imageAttributes } =
+            this.state;
         return (
             <div className="App">
                 <Particles className="particles" params={particleOptions} />
@@ -113,7 +150,7 @@ class App extends Component {
                 {route === "home" ? (
                     <>
                         <Logo />
-                        <Rank />
+                        <Rank name={user.name} entries={user.entries} />
                         <ImageLinkForm
                             onInputChange={this.onInputChange}
                             onDetectButtonSubmit={this.onDetectButtonSubmit}
@@ -124,9 +161,15 @@ class App extends Component {
                         />
                     </>
                 ) : route === "signIn" ? (
-                    <SignIn onRouteChange={this.onRouteChange} />
+                    <SignIn
+                        loadUser={this.loadUser}
+                        onRouteChange={this.onRouteChange}
+                    />
                 ) : (
-                    <Register onRouteChange={this.onRouteChange} />
+                    <Register
+                        loadUser={this.loadUser}
+                        onRouteChange={this.onRouteChange}
+                    />
                 )}
             </div>
         );
