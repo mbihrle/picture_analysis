@@ -7,13 +7,8 @@ import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import Rank from "./components/Rank/Rank";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 import Particles from "react-particles-js";
-// old way
-import Clarifai from "clarifai";
-import "./App.css";
 
-const clarifaiApp = new Clarifai.App({
-    apiKey: "4060302e88684205ac4cf81edf5bad47",
-});
+import "./App.css";
 
 const log = (d) => {
     try {
@@ -42,23 +37,25 @@ const particleOptions = {
     },
 };
 
+const initialState = {
+    input: "",
+    imageUrl: "",
+    imageAttributes: [],
+    route: "signIn",
+    isSignedIn: false,
+    user: {
+        id: "",
+        name: "",
+        email: "",
+        entries: 0,
+        joined: "",
+    },
+};
+
 class App extends Component {
     constructor() {
         super();
-        this.state = {
-            input: "",
-            imageUrl: "",
-            imageAttributes: [],
-            route: "signIn",
-            isSignedIn: false,
-            user: {
-                id: "",
-                name: "",
-                email: "",
-                entries: 0,
-                joined: "",
-            },
-        };
+        this.state = initialState;
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -89,20 +86,26 @@ class App extends Component {
 
     onDetectButtonSubmit = () => {
         this.setState({ imageUrl: this.state.input });
-        // Prediction on general model using video API
-        clarifaiApp.models
-            .predict(
-                Clarifai.GENERAL_MODEL,
-                // Clarifai.COLOR_MODEL,
-                // "a403429f2ddf4b49b307e318f00e528b",
-                // "53e1df302c079b3db8a0a36033ed2d15", // new Face Detection Model Key
-                // "https://samples.clarifai.com/metro-north.jpg"
-                this.state.input
-            )
-            // .then((response) => console.log(response.outputs[0].data.concepts))
-            // .then((response) =>
-            //     this.getImageDescription(response.outputs[0].data.concepts)
-            // )
+        fetch("http://localhost:3000/imageurl", {
+            method: "post",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ input: this.state.input }),
+        })
+            .then((response) => response.json())
+            // // Prediction on general model using video API
+            // clarifaiApp.models
+            //     .predict(
+            //         Clarifai.GENERAL_MODEL,
+            //         // Clarifai.COLOR_MODEL,
+            //         // "a403429f2ddf4b49b307e318f00e528b",
+            //         // "53e1df302c079b3db8a0a36033ed2d15", // new Face Detection Model Key
+            //         // "https://samples.clarifai.com/metro-north.jpg"
+            //         this.state.input
+            //     )
+            //     // .then((response) => console.log(response.outputs[0].data.concepts))
+            //     // .then((response) =>
+            //     //     this.getImageDescription(response.outputs[0].data.concepts)
+            //     // )
             .then((response) => {
                 this.setState({
                     imageAttributes: response.outputs[0].data.concepts,
@@ -122,7 +125,8 @@ class App extends Component {
                                     entries,
                                 })
                             );
-                        });
+                        })
+                        .catch(console.log);
                 }
             })
             .catch((err) => log(err));
@@ -130,7 +134,7 @@ class App extends Component {
 
     onRouteChange = (route) => {
         if (route === "signOut") {
-            this.setState({ isSignedIn: false });
+            this.setState(initialState);
         } else if (route === "home") {
             this.setState({ isSignedIn: true });
         }
@@ -147,6 +151,7 @@ class App extends Component {
                     isSignedIn={isSignedIn}
                     onRouteChange={this.onRouteChange}
                 />
+                <h1> Route: {route}</h1>
                 {route === "home" ? (
                     <>
                         <Logo />
@@ -171,6 +176,17 @@ class App extends Component {
                         onRouteChange={this.onRouteChange}
                     />
                 )}
+                {/* ) : route === "register" ? (
+                    <Register
+                        loadUser={this.loadUser}
+                        onRouteChange={this.onRouteChange}
+                    />
+                ) : (
+                    <SignIn
+                        loadUser={this.loadUser}
+                        onRouteChange={this.onRouteChange}
+                    />
+                )} */}
             </div>
         );
     }
