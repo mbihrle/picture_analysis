@@ -7,6 +7,7 @@ import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import Rank from "./components/Rank/Rank";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 import Particles from "react-particles-js";
+import { baseUrl } from "./config";
 
 import "./App.css";
 
@@ -21,7 +22,7 @@ const log = (d) => {
 const particleOptions = {
     particles: {
         number: {
-            value: 100,
+            value: 70,
         },
         size: {
             value: 3,
@@ -86,7 +87,7 @@ class App extends Component {
 
     onDetectButtonSubmit = () => {
         this.setState({ imageUrl: this.state.input });
-        fetch("http://localhost:3000/imageurl", {
+        fetch(`${baseUrl}/imageurl`, {
             method: "post",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ input: this.state.input }),
@@ -97,7 +98,7 @@ class App extends Component {
                     imageAttributes: response.outputs[0].data.concepts,
                 });
                 if (response) {
-                    fetch("http://localhost:3000/image", {
+                    fetch(`${baseUrl}/image`, {
                         method: "put",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
