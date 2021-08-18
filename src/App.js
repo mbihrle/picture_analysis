@@ -86,7 +86,7 @@ class App extends Component {
 
     onDetectButtonSubmit = () => {
         this.setState({ imageUrl: this.state.input });
-        fetch("https://shielded-bayou-97172.herokuapp.com/imageurl", {
+        fetch("http://localhost:3000/imageurl", {
             method: "post",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ input: this.state.input }),
@@ -97,7 +97,7 @@ class App extends Component {
                     imageAttributes: response.outputs[0].data.concepts,
                 });
                 if (response) {
-                    fetch("https://shielded-bayou-97172.herokuapp.com/image", {
+                    fetch("http://localhost:3000/image", {
                         method: "put",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
